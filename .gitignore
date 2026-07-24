@@ -1,10 +1,11 @@
-# --- Rust Artifacts ---
-/target/
+cat << 'EOF' > .gitignore
+# --- Rust Core Artifacts ---
+/rust-core/target/
 **/*.rs.bk
 Cargo.lock
 
-# --- Go Artifacts ---
-/bin/
+# --- Go Network Gateway Artifacts ---
+/go-gateway/bin/
 *.exe
 *.exe~
 *.dll
@@ -12,10 +13,13 @@ Cargo.lock
 *.dylib
 *.test
 *.out
+*.prof
 
-# --- Operating System & Editor Files ---
+# --- Operating Systems & Editors ---
 .DS_Store
+Thumbs.db
 .vscode/
 .idea/
 *.swp
 *.swo
+EOF

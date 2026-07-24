@@ -1,1 +1,21 @@
-target/
+# --- Rust Artifacts ---
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# --- Go Artifacts ---
+/bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# --- Operating System & Editor Files ---
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo

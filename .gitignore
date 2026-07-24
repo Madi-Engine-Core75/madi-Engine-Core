@@ -1,0 +1,23 @@
+# --- Rust Core Artifacts ---
+/rust-core/target/
+**/*.rs.bk
+Cargo.lock
+
+# --- Go Network Gateway Artifacts ---
+/go-gateway/bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.prof
+
+# --- Operating Systems & Editors ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo

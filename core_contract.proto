@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package madi.core.v1;
+
+option go_package = "github.com/mahdi-ziraoui/madi-engine-core/gateway/pb;pb";
+
+// خدمة النواة المركزية لمعالجة المصادقة والعمليات الآمنة
+service CoreEngineService {
+  // عملية التحقق من الهوية وإصدار جلسة آمنة
+  rpc AuthenticateUser (AuthRequest) returns (AuthResponse);
+  
+  // تنفيذ عملية مالية أو تبادل بيانات مشفر عبر المخزن الآمن
+  rpc ProcessSecurePayload (SecurePayloadRequest) returns (SecurePayloadResponse);
+}
+
+// طلب المصادقة القادم من البوابة
+message AuthRequest {
+  string client_id = 1;
+  string credentials_hash = 2; // تم معالجته مسبقاً عبر البوابة لمنع تمرير الكلمات السرية الخام
+  string device_fingerprint = 3;
+}
+
+// استجابة النواة بعد التحقق وتوليد التشفير
+message AuthResponse {
+  bool success = 1;
+  string session_token = 2;
+  string error_message = 3;
+  int64 expires_at = 4;
+}
+
+// طلب البيانات المشفرة (تطبيق معايير AES-256-GCM)
+message SecurePayloadRequest {
+  string session_token = 1;
+  bytes encrypted_data = 2; // البيانات مشفرة بالكامل
+  bytes nonce = 3;          // رقم عشوائي فريد لكل عملية (Nonce حتمي غير مكرر)
+}
+
+// استجابة النواة بعد المعالجة الآمنة
+message SecurePayloadResponse {
+  bool status = 1;
+  bytes processed_data = 2;
+  bytes response_nonce = 3;
+  string error_code = 4;
+}

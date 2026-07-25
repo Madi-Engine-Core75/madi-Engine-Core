@@ -1,4 +1,4 @@
-name: Madi-Engine CI/CD Pipeline
+name: Madi-Engine-Core CI
 
 on:
   push:
@@ -7,23 +7,28 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-rust-core:
+  build-rust:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Rust Toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
       - name: Build Rust Core
-        run: cargo build --verbose
+        working-directory: ./src
+        run: cargo build --release
 
-  build-go-gateway:
+  build-go:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
-      - name: Build Gateway
-        run: cd gateway && go build -v ./...
-
+          go-version: '1.21'
+      - name: Build Go Gateway
+        working-directory: ./gateway
+        run: go build -v ./...

@@ -1,3 +1,5 @@
+mkdir -p gateway
+nano gateway/auth.go
 use aes_gcm::{
     aead::{Aead, KeyInit, OsRng},
     Aes256Gcm

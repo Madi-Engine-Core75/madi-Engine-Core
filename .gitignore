@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+cat << 'EOF' > .gitignore
+>>>>>>> 90fd96b53ae71356f181b669360234cd5191df05
 # --- Rust Core Artifacts ---
 /rust-core/target/
 **/*.rs.bk
@@ -21,3 +25,7 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+<<<<<<< HEAD
+=======
+EOF
+>>>>>>> 90fd96b53ae71356f181b669360234cd5191df05

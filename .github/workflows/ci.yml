@@ -2,33 +2,45 @@ name: Madi-Engine-Core CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ main, master ]
 
 jobs:
-  build-rust:
+  build-and-test:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - name: Build Rust Core
-        working-directory: ./src
-        run: cargo build --release
 
-  build-go:
-    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # إعداد بيئة Go للجيتواي
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
-      - name: Build Go Gateway
-        working-directory: ./gateway
-        run: go build -v ./...
+          go-version: '1.22'
+
+      # إعداد بيئة Rust للنواة
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      # بناء واختبار Rust Core
+      - name: Build and Test Rust Core
+        run: |
+          cd core/rust-core
+          cargo build --verbose
+          cargo test --verbose
+
+      # بناء واختبار Go Gateway
+      - name: Build and Test Go Gateway
+        run: |
+          cd apps/gateway
+          go build -v ./cmd/server/...
+          go test -v ./...
+
+      # اختبار الـ Makefile الموحد لضمان سلامته
+      - name: Verify Makefile Integration
+        run: |
+          make all

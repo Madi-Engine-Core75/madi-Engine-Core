@@ -1,0 +1,19 @@
+syntax = "proto3";
+package telemetry;
+option go_package = "./proto";
+
+service CoreEngineService {
+    rpc StreamMetrics (EmptyRequest) returns (stream EngineMetrics);
+}
+
+message EmptyRequest {}
+
+message EngineMetrics {
+    string status = 1;
+    double latency = 2;
+    double system_load = 3;
+    double temperature = 4;
+    double vortex_rpm = 5;
+    double vortex_clock = 6;
+    int32 active_threads = 7;
+}

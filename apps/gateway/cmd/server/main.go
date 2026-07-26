@@ -1,28 +1,17 @@
 package main
 
 import (
-	"encoding/json"
+	"log"
 	"net/http"
+	"github.com/MadiEngine-Core75/Madi-Engine-Core/apps/gateway/internal/router"
 )
 
-type Response struct {
-	Status  string `json:"status"`
-	Message string `json:"message"`
-}
-
 func main() {
-	http.HandleFunc("/api/v1/auth/login", handleLogin)
-	http.ListenAndServe(":8080", nil)
-}
+	mux := router.SetupRoutes()
 
-func handleLogin(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	
-	res := Response{
-		Status:  "success",
-		Message: "Authentication gateway ready",
+	port := ":8080"
+	log.Printf("Gateway is running on port %s...", port)
+	if err := http.ListenAndServe(port, mux); err != nil {
+		log.Fatalf("Server failed to start: %v", err)
 	}
-
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(res)
 }

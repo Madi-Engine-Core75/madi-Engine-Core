@@ -1,16 +1,21 @@
 # Madi-Engine-Core
 
-Madi-Engine-Core is a high-performance, secure middleware kernel designed as an orchestration layer for financial routing and decentralized communication modules.
+High-performance, secure middleware kernel designed as an orchestration layer for financial routing and decentralized communication modules.
 
 ## Architecture & Tech Stack
 
-* **Core (Rust - 74.7%):** Manages secure state evaluation, cryptographic operations (AES-256-GCM), and internal vault storage.
-* **Gateway (Go - 25.3%):** Handles high-concurrency network traffic, routing protocols, and account authentication (`/api/v1/auth/login`).
-* **CI/CD Pipeline:** Automated build and test workflows configured via GitHub Actions.
+* **Core (`core/rust-core/`):** Built with Rust, manages secure state evaluation, cryptographic operations (AES-256-GCM), and internal vault storage.
+* **Gateway (`apps/gateway/`):** Built with Go, handles high-concurrency network traffic, routing protocols, and account authentication (`/api/v1/auth/login`).
+* **CI/CD Pipeline (`.github/workflows/ci.yml`):** Automated build, test, and verification workflows.
 
 ## Repository Structure
 
-* `src/`: Core Rust logic and storage encryption modules.
-* `gateway/`: Go high-concurrency routing and authentication gateway.
-* `.github/workflows/`: Automated CI/CD integration pipelines.
-
+```text
+Madi-Engine-Core/
+├── apps/
+│   └── gateway/          # Go gateway and API handlers
+├── core/
+│   └── rust-core/        # Rust core logic and cryptographic modules
+├── proto/                # Shared gRPC contracts
+├── .github/workflows/    # CI/CD automation pipelines
+└── Makefile              # Unified build automation

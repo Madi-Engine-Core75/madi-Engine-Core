@@ -1,0 +1,61 @@
+hereuse tonic::{transport::Server, Request, Response, Status};
+use rust_core::CryptoEngine;
+
+pub mod core_proto {
+    tonic::include_proto!("core");
+}
+
+use core_proto::vault_service_server::{VaultService, VaultServiceServer};
+use core_proto::{AuthRequest, AuthResponse};
+
+#[derive(Default)]
+pub struct MyVaultService {
+    crypto: CryptoEngine,
+}
+
+#[tonic::async_trait]
+impl VaultService for MyVaultService {
+    async fn authenticate_user(
+        &self,
+        request: Request<AuthRequest>,
+    ) -> Result<Response<AuthResponse>, Status> {
+        let req = request.into_inner();
+        
+        // التحقق من البيانات وتشفيرها داخل النواة كجزء من الحماية
+        let credentials = format!("{}:{}", req.username, req.password);
+        let _ = self.crypto.encrypt(credentials.as_bytes())
+            .map_err(|e| Status::internal(e))?;
+
+        // منطق مبدئي للتحقق ومنح رمز الجلسة الآمن
+        if req.username == "admin" && req.password == "secure_password" {
+            let reply = AuthResponse {
+                status: "success".into(),
+                token: "madi-secure-jwt-token-xyz".into(),
+                error: "".into(),
+            };
+            Ok(Response::new(reply))
+        } else {
+            let reply = AuthResponse {
+                status: "error".into(),
+                token: "".into(),
+                error: "Invalid credentials".into(),
+            };
+            Ok(Response::new(reply))
+        }
+    }
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let addr = "[::1]:50051".parse()?;
+    let vault_service = MyVaultService::default();
+
+    println!("Madi-Engine-Core Security Server listening on {}", addr);
+
+    Server::builder()
+        .add_service(VaultServiceServer::new(vault_service))
+        .serve(addr)
+        .await?;
+
+    Ok(())
+}

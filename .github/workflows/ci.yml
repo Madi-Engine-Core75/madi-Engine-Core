@@ -1,37 +1,48 @@
-name: Madi Gateway CI
+name: Madi-Engine-Core CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ main ]
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout Repository
       uses: actions/checkout@v4
 
+    # 1. إعداد بيئة Rust
+    - name: Set up Rust Toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
+    # 2. إعداد بيئة Go
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
         go-version: '1.22'
 
-    - name: Initialize Go Module (if missing)
+    # 3. تثبيت أدوات الـ Protobuf
+    - name: Install Protoc
       run: |
-        if [ ! -f "go.mod" ]; then
-          go mod init madi-gateway
-        fi
+        sudo apt-get update
+        sudo apt-get install -y protobuf-compiler
 
-    - name: Build Gateway
-      run: GOWORK=off go build -v ./apps/gateway/cmd/server/main.go
-
-    - name: Run Tests (Optional)
+    # 4. بناء واختبار النواة (Rust Core)
+    - name: Build & Test Rust Core
       run: |
-        if ls *_test.go 1> /dev/null 2>&1; then
-          GOWORK=off go test -v ./...
-        else
-          echo "No tests found, skipping."
-        fi
+        cd core/rust-core
+        cargo build --verbose
+        cargo test --verbose
+
+    # 5. بناء واختبار البوابة (Go Gateway)
+    - name: Build & Test Go Gateway
+      run: |
+        cd apps/gateway
+        go build -v ./...
+        go test -v ./...

@@ -1,31 +1,47 @@
-# Makefile موحد لمشروع MadiEngineCore والبوابات المرتبطة
+name: Madi-Engine-Core CI
 
-.PHONY: all clean build test fmt lint
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
-all: clean fmt test build
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
 
-# تنظيف مخلفات البناء القديمة
-clean:
-	@echo "==> Cleaning build artifacts..."
-	@rm -rf bin/
-	@cargo clean --manifest-path Cargo.toml 2>/dev/null || true
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-# تنسيق وفحص الكود البرمجي محلياً
-fmt:
-	@echo "==> Formatting code..."
-	@go fmt ./...
-	@cargo fmt --manifest-path Cargo.toml -- --check
+      - name: Set up Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
 
-# تشغيل الاختبارات للتأكد من سلامة المنطق (Core & Gateway)
-test:
-	@echo "==> Running tests..."
-	@go test -v ./...
-	@cargo test --manifest-path Cargo.toml
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
 
-# بناء النظامين (Rust Core & Go Services)
-build:
-	@echo "==> Building projects..."
-	@mkdir -p bin
-	@go build -o bin/gateway ./cmd/gateway/... 2>/dev/null || go build -o bin/gateway ./gateway/... 2>/dev/null || true
-	@cargo build --release --manifest-path Cargo.toml
-	@echo "==> Build completed successfully!"
+      - name: Install Protoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler
+
+      - name: Build and Test Rust Core
+        run: |
+          cd core/rust-core
+          cargo build --verbose
+          cargo test --verbose
+
+      - name: Build and Test Go Gateway
+        run: |
+          cd apps/gateway
+          go get google.golang.org/grpc
+          go get google.golang.org/grpc/credentials/insecure
+          go mod tidy
+          cd ../..
+          go build -v ./apps/gateway/...
+          go test -v ./apps/gateway/...

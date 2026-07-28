@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package vault;
+
+option go_package = "madi-gateway/proto/vault";
+
+// خدمة الخزنة الأمنية للنواة
+service VaultService {
+  rpc EncryptData (EncryptRequest) returns (EncryptResponse);
+  rpc DecryptData (DecryptRequest) returns (DecryptResponse);
+}
+
+message EncryptRequest {
+  bytes plaintext = 1;
+}
+
+message EncryptResponse {
+  bytes ciphertext = 1;
+  bytes nonce = 2;
+  string error = 3;
+}
+
+message DecryptRequest {
+  bytes ciphertext = 1;
+  bytes nonce = 2;
+}
+
+message DecryptResponse {
+  bytes plaintext = 1;
+  string error = 2;
+}

@@ -1,17 +1,15 @@
 package main
 
 import (
-	"log"
-	"net/http"
-	"github.com/MadiEngine-Core75/Madi-Engine-Core/apps/gateway/internal/router"
+"log"
+"gateway/internal/router"
+"gateway/internal/handler"
 )
 
 func main() {
-	mux := router.SetupRoutes()
-
-	port := ":8080"
-	log.Printf("Gateway is running on port %s...", port)
-	if err := http.ListenAndServe(port, mux); err != nil {
-		log.Fatalf("Server failed to start: %v", err)
-	}
+log.Println("Starting gateway server...")
+r := router.NewRouter()
+_ = r
+_ = handler.NewHandler()
+log.Println("Gateway server initialized successfully.")
 }

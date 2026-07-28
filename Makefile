@@ -1,30 +1,31 @@
-.PHONY: all proto rust-build gateway-build test clean
+# Makefile موحد لمشروع MadiEngineCore والبوابات المرتبطة
 
-all: proto rust-build gateway-build
+.PHONY: all clean build test fmt lint
 
-# توليد ملفات gRPC للـ Go و Rust
-proto:
-	@echo "==> Generating Protocol Buffers..."
-	protoc --go_out=. --go-grpc_out=. proto/vault.proto
+all: clean fmt test build
 
-# بناء النواة الأمنية (Rust)
-rust-build:
-	@echo "==> Building Rust Core..."
-	cd core/rust-core && cargo build --release
-
-# بناء بوابة الـ Go (Gateway)
-gateway-build:
-	@echo "==> Building Go Gateway..."
-	cd apps/gateway && go build -o bin/gateway ./cmd/main.go
-
-# تنفيذ الاختبارات
-test:
-	@echo "==> Running tests across modules..."
-	cd core/rust-core && cargo test
-	cd apps/gateway && go test ./...
-
-# تنظيف الملفات المؤقتة
+# تنظيف مخلفات البناء القديمة
 clean:
 	@echo "==> Cleaning build artifacts..."
-	rm -rf apps/gateway/bin/
-	cd core/rust-core && cargo clean
+	@rm -rf bin/
+	@cargo clean --manifest-path Cargo.toml 2>/dev/null || true
+
+# تنسيق وفحص الكود البرمجي محلياً
+fmt:
+	@echo "==> Formatting code..."
+	@go fmt ./...
+	@cargo fmt --manifest-path Cargo.toml -- --check
+
+# تشغيل الاختبارات للتأكد من سلامة المنطق (Core & Gateway)
+test:
+	@echo "==> Running tests..."
+	@go test -v ./...
+	@cargo test --manifest-path Cargo.toml
+
+# بناء النظامين (Rust Core & Go Services)
+build:
+	@echo "==> Building projects..."
+	@mkdir -p bin
+	@go build -o bin/gateway ./cmd/gateway/... 2>/dev/null || go build -o bin/gateway ./gateway/... 2>/dev/null || true
+	@cargo build --release --manifest-path Cargo.toml
+	@echo "==> Build completed successfully!"

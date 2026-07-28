@@ -1,26 +1,30 @@
-.PHONY: all build-core build-gateway clean test
+.PHONY: all proto rust-build gateway-build test clean
 
-# الأمر الافتراضي لبناء الكل
-all: clean build-core build-gateway
+all: proto rust-build gateway-build
 
-# بناء نواة Rust
-build-core:
+# توليد ملفات gRPC للـ Go و Rust
+proto:
+	@echo "==> Generating Protocol Buffers..."
+	protoc --go_out=. --go-grpc_out=. proto/vault.proto
+
+# بناء النواة الأمنية (Rust)
+rust-build:
 	@echo "==> Building Rust Core..."
 	cd core/rust-core && cargo build --release
 
-# بناء بوابة Golang
-build-gateway:
+# بناء بوابة الـ Go (Gateway)
+gateway-build:
 	@echo "==> Building Go Gateway..."
-	cd apps/gateway && go build -o bin/gateway cmd/server/main.go
+	cd apps/gateway && go build -o bin/gateway ./cmd/main.go
 
-# تنظيف ملفات البناء المؤقتة
-clean:
-	@echo "==> Cleaning up build artifacts..."
-	rm -rf apps/gateway/bin
-	cd core/rust-core && cargo clean
-
-# تشغيل الاختبارات
+# تنفيذ الاختبارات
 test:
-	@echo "==> Running tests..."
+	@echo "==> Running tests across modules..."
 	cd core/rust-core && cargo test
 	cd apps/gateway && go test ./...
+
+# تنظيف الملفات المؤقتة
+clean:
+	@echo "==> Cleaning build artifacts..."
+	rm -rf apps/gateway/bin/
+	cd core/rust-core && cargo clean

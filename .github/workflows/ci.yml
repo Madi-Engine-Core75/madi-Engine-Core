@@ -36,7 +36,7 @@ jobs:
         cargo build --verbose
         cargo test --verbose
 
-        - name: Build and Test Go Gateway
+    - name: Build and Test Go Gateway
       run: |
         cd apps/gateway
         GOWORK=off go build -v ./...

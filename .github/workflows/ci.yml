@@ -9,9 +9,6 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./apps/gateway
 
     steps:
     - name: Checkout code
@@ -28,8 +25,8 @@ jobs:
           go mod init madi-gateway
         fi
 
-        - name: Build Gateway
-      run: GOWORK=off go build -v ./cmd/server/main.go
+    - name: Build Gateway
+      run: GOWORK=off go build -v ./apps/gateway/cmd/server/main.go
 
     - name: Run Tests
       run: GOWORK=off go test -v ./...

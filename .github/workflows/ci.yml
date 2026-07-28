@@ -36,8 +36,8 @@ jobs:
         cargo build --verbose
         cargo test --verbose
 
-        - name: Build and Test Go Gateway
-      working-directory: ./apps/gateway
+            - name: Build and Test Go Gateway
       run: |
+        cd apps/gateway
         go build -v ./...
         go test -v ./...

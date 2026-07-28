@@ -1,30 +1,26 @@
-use rust_core::CryptoEngine;
+mod crypto;
+use crypto::CryptoEngine;
 
-fn main() {
-    println!("Initializing Madi-Engine-Core Security Module...");
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // توليد مفتاح رئيسي جديد للاختبار
+    let master_key = CryptoEngine::generate_master_key();
 
-    // تهيئة محرك التشفير
-    let engine = CryptoEngine::new();
+    // تهيئة محرك التشفير بالمفتاح المولّد
+    let crypto_engine = CryptoEngine::new(&master_key)
+        .map_err(|e| format!("Failed to initialize CryptoEngine: {}", e))?;
 
-    // بيانات تجريبية لتشفيرها
-    let secret_data = b"Hello, this is secure vault data protected by AES-GCM-256!";
-    println!("Original Data: {:?}", String::from_utf8_lossy(secret_data));
+    let plaintext = b"MadiEngineCore Secure Payload Test";
+    
+    // تجربة التشفير
+    let (ciphertext, nonce) = crypto_engine.encrypt(plaintext)
+        .map_err(|e| format!("Encryption error: {}", e))?;
 
-    // عملية التشفير
-    match engine.encrypt(secret_data) {
-        Ok((ciphertext, nonce)) => {
-            println!("Encryption successful!");
-            println!("Ciphertext (hex): {:x?}", ciphertext);
+    // تجربة فك التشفير
+    let decrypted = crypto_engine.decrypt(&ciphertext, &nonce)
+        .map_err(|e| format!("Decryption error: {}", e))?;
 
-            // عملية فك التشفير
-            match engine.decrypt(&ciphertext, &nonce) {
-                Ok(decrypted_data) => {
-                    println!("Decryption successful!");
-                    println!("Decrypted Data: {:?}", String::from_utf8_lossy(&decrypted_data));
-                }
-                Err(e) => eprintln!("Decryption failed: {}", e),
-            }
-        }
-        Err(e) => eprintln!("Encryption failed: {}", e),
-    }
+    assert_eq!(&plaintext[..], &decrypted[..]);
+    println!("Crypto engine verification passed successfully!");
+
+    Ok(())
 }

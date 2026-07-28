@@ -1,26 +1,32 @@
 mod crypto;
+mod auth;
+
 use crypto::CryptoEngine;
+use auth::AuthValidator;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // توليد مفتاح رئيسي جديد للاختبار
     let master_key = CryptoEngine::generate_master_key();
-
-    // تهيئة محرك التشفير بالمفتاح المولّد
     let crypto_engine = CryptoEngine::new(&master_key)
         .map_err(|e| format!("Failed to initialize CryptoEngine: {}", e))?;
 
-    let plaintext = b"MadiEngineCore Secure Payload Test";
-    
-    // تجربة التشفير
-    let (ciphertext, nonce) = crypto_engine.encrypt(plaintext)
-        .map_err(|e| format!("Encryption error: {}", e))?;
+    // محاكاة طلب وارد من البوابة مع التوكن والبيانات المشفرة
+    let incoming_token = "MADI_SECURE_TOKEN_123";
+    let plaintext = b"Microservice Payload Transaction";
 
-    // تجربة فك التشفير
-    let decrypted = crypto_engine.decrypt(&ciphertext, &nonce)
-        .map_err(|e| format!("Decryption error: {}", e))?;
+    // الخطوة 1: التحقق من المصادقة أولاً
+    let is_authorized = AuthValidator::verify_token(incoming_token)
+        .map_err(|e| format!("Auth error: {}", e))?;
 
-    assert_eq!(&plaintext[..], &decrypted[..]);
-    println!("Crypto engine verification passed successfully!");
+    if is_authorized {
+        println!("Authentication passed successfully.");
+
+        // الخطوة 2: التشفير والمعالجة في النواة
+        let (ciphertext, nonce) = crypto_engine.encrypt(plaintext)?;
+        let decrypted = crypto_engine.decrypt(&ciphertext, &nonce)?;
+
+        assert_eq!(&plaintext[..], &decrypted[..]);
+        println!("Microservice pipeline verified successfully!");
+    }
 
     Ok(())
 }

@@ -9,16 +9,25 @@ pub struct CryptoEngine {
 }
 
 impl CryptoEngine {
-    pub fn new() -> Self {
-        // توليد مفتاح تشفير عشوائي وآمن بطول 256-bit
+    /// تهيئة المحرك بمفتاح يتم استقباله مسبقاً (من متغيرات البيئة أو الخزنة)
+    pub fn new(secret_key: &[u8]) -> Result<Self, &'static str> {
+        if secret_key.len() != 32 {
+            return Err("Invalid key length: AES-256 requires exactly 32 bytes");
+        }
+        let key = *Key::<Aes256Gcm>::from_slice(secret_key);
+        Ok(Self { key })
+    }
+
+    /// دالة مساعدة لتوليد مفتاح جديد (تستخدم فقط عند التهيئة الأولى للإعدادات وليس عند تشغيل الخادم)
+    pub fn generate_master_key() -> Vec<u8> {
         let key = Aes256Gcm::generate_key(&mut OsRng);
-        Self { key }
+        key.to_vec()
     }
 
     pub fn encrypt(&self, data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), &'static str> {
         let cipher = Aes256Gcm::new(&self.key);
         
-        // توليد مفتاح عشوائي فريد لكل عملية تشفير (Nonce) بطول 12 بايت
+        // توليد Nonce فريد بطول 12 بايت لكل عملية تشفير
         let mut nonce_bytes = [0u8; 12];
         OsRng.fill_bytes(&mut nonce_bytes);
         let nonce = Nonce::from_slice(&nonce_bytes);
@@ -39,3 +48,4 @@ impl CryptoEngine {
         Ok(plaintext)
     }
 }
+

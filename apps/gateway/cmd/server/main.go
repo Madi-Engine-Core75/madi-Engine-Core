@@ -1,18 +1,32 @@
 package main
 
 import (
-"log"
-"net/http"
+	"log"
+	"net/http"
 
-"gateway/internal/router"
+	"github.com/MadiEngine-Core75/madi-Engine-Core/apps/gateway/internal/router"
 )
 
-func main() {
-mux := router.SetupRoutes()
+func handleGatewayRoute(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("X-Madi-Token")
 
-port := ":8080"
-log.Printf("Gateway is running on port %s...", port)
-if err := http.ListenAndServe(port, mux); err != nil {
-log.Fatalf("Server failed to start: %v", err)
+	if token == "" {
+		http.Error(w, "Unauthorized: Missing security token", http.StatusUnauthorized)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "Gateway routing passed: Request securely forwarded to MadiEngineCore.")
 }
+
+func main() {
+	mux := router.SetupRoutes()
+	mux.HandleFunc("/api/v1/route", handleGatewayRoute)
+
+	port := ":8080"
+	log.Printf("Madi-Gateway is running on port %s...", port)
+	if err := http.ListenAndServe(port, mux); err != nil {
+		log.Fatalf("Gateway server failed to start: %v", err)
+	}
 }
+

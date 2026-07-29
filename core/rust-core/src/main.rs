@@ -1,30 +1,32 @@
-use rust_core::CryptoEngine;
+mod crypto;
+mod auth;
 
-fn main() {
-    println!("Initializing Madi-Engine-Core Security Module...");
+use crypto::CryptoEngine;
+use auth::AuthValidator;
 
-    // تهيئة محرك التشفير
-    let engine = CryptoEngine::new();
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let master_key = CryptoEngine::generate_master_key();
+    let crypto_engine = CryptoEngine::new(&master_key)
+        .map_err(|e| format!("Failed to initialize CryptoEngine: {}", e))?;
 
-    // بيانات تجريبية لتشفيرها
-    let secret_data = b"Hello, this is secure vault data protected by AES-GCM-256!";
-    println!("Original Data: {:?}", String::from_utf8_lossy(secret_data));
+    // محاكاة طلب وارد من البوابة مع التوكن والبيانات المشفرة
+    let incoming_token = "MADI_SECURE_TOKEN_123";
+    let plaintext = b"Microservice Payload Transaction";
 
-    // عملية التشفير
-    match engine.encrypt(secret_data) {
-        Ok((ciphertext, nonce)) => {
-            println!("Encryption successful!");
-            println!("Ciphertext (hex): {:x?}", ciphertext);
+    // الخطوة 1: التحقق من المصادقة أولاً
+    let is_authorized = AuthValidator::verify_token(incoming_token)
+        .map_err(|e| format!("Auth error: {}", e))?;
 
-            // عملية فك التشفير
-            match engine.decrypt(&ciphertext, &nonce) {
-                Ok(decrypted_data) => {
-                    println!("Decryption successful!");
-                    println!("Decrypted Data: {:?}", String::from_utf8_lossy(&decrypted_data));
-                }
-                Err(e) => eprintln!("Decryption failed: {}", e),
-            }
-        }
-        Err(e) => eprintln!("Encryption failed: {}", e),
+    if is_authorized {
+        println!("Authentication passed successfully.");
+
+        // الخطوة 2: التشفير والمعالجة في النواة
+        let (ciphertext, nonce) = crypto_engine.encrypt(plaintext)?;
+        let decrypted = crypto_engine.decrypt(&ciphertext, &nonce)?;
+
+        assert_eq!(&plaintext[..], &decrypted[..]);
+        println!("Microservice pipeline verified successfully!");
     }
+
+    Ok(())
 }

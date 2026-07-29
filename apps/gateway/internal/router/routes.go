@@ -1,16 +1,17 @@
 package router
 
 import (
-"net/http"
+	"net/http"
 
-"gateway/internal/handler"
+	"github.com/MadiEngine-Core75/madi-Engine-Core/apps/gateway/internal/handler"
 )
 
 func SetupRoutes() *http.ServeMux {
-mux := http.NewServeMux()
+	mux := http.NewServeMux()
 
-// Register handlers
-mux.HandleFunc("/health", handler.HealthCheck)
+	// Register handlers
+	mux.HandleFunc("/health", handler.HealthCheck)
 
-return mux
+	return mux
 }
+

@@ -1,26 +1,47 @@
-.PHONY: all build-core build-gateway clean test
+name: Madi-Engine-Core CI
 
-# الأمر الافتراضي لبناء الكل
-all: clean build-core build-gateway
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
-# بناء نواة Rust
-build-core:
-	@echo "==> Building Rust Core..."
-	cd core/rust-core && cargo build --release
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
 
-# بناء بوابة Golang
-build-gateway:
-	@echo "==> Building Go Gateway..."
-	cd apps/gateway && go build -o bin/gateway cmd/server/main.go
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-# تنظيف ملفات البناء المؤقتة
-clean:
-	@echo "==> Cleaning up build artifacts..."
-	rm -rf apps/gateway/bin
-	cd core/rust-core && cargo clean
+      - name: Set up Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
 
-# تشغيل الاختبارات
-test:
-	@echo "==> Running tests..."
-	cd core/rust-core && cargo test
-	cd apps/gateway && go test ./...
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Install Protoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler
+
+      - name: Build and Test Rust Core
+        run: |
+          cd core/rust-core
+          cargo build --verbose
+          cargo test --verbose
+
+      - name: Build and Test Go Gateway
+        run: |
+          cd apps/gateway
+          go get google.golang.org/grpc
+          go get google.golang.org/grpc/credentials/insecure
+          go mod tidy
+          cd ../..
+          go build -v ./apps/gateway/...
+          go test -v ./apps/gateway/...

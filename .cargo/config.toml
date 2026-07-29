@@ -1,6 +1,0 @@
-[target.aarch64-linux-android]
-linker = "clang"
-rustflags = [
-    "-C", "link-arg=--sysroot=/data/data/com.termux/files/usr",
-    "-C", "link-arg=-L/data/data/com.termux/files/usr/lib"
-]

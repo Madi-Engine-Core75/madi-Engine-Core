@@ -1,12 +1,17 @@
 package router
 
 import (
-"log"
+	"net/http"
+
+	"github.com/MadiEngine-Core75/madi-Engine-Core/apps/gateway/internal/handler"
 )
 
-type Router struct{}
+func SetupRoutes() *http.ServeMux {
+	mux := http.NewServeMux()
 
-func NewRouter() *Router {
-log.Println("Router initialized")
-return &Router{}
+	// Register handlers
+	mux.HandleFunc("/health", handler.HealthCheck)
+
+	return mux
 }
+

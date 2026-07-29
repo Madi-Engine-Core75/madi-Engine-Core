@@ -2,7 +2,7 @@ name: Wadi-Engine-Core CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, fix/clean-git-history ]
   pull_request:
     branches: [ main ]
 
@@ -23,7 +23,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: '1.26.4'
 
       - name: Install Protoc
         run: |
@@ -37,11 +37,10 @@ jobs:
           cargo test --verbose
 
       - name: Build and Test Go Gateway
+        working-directory: apps/gateway
         run: |
-          cd apps/gateway
           go get google.golang.org/grpc
           go get google.golang.org/protobuf
           go mod tidy
-          cd ../..
-          go build -v ./apps/gateway/...
-          go test -v ./apps/gateway/...
+          go build -v ./...
+          go test -v ./...

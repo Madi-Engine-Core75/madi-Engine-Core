@@ -1,32 +1,67 @@
-mod crypto;
-mod auth;
+use tonic::{transport::Server, Request, Response, Status};
 
-use crypto::CryptoEngine;
-use auth::AuthValidator;
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let master_key = CryptoEngine::generate_master_key();
-    let crypto_engine = CryptoEngine::new(&master_key)
-        .map_err(|e| format!("Failed to initialize CryptoEngine: {}", e))?;
-
-    // محاكاة طلب وارد من البوابة مع التوكن والبيانات المشفرة
-    let incoming_token = "MADI_SECURE_TOKEN_123";
-    let plaintext = b"Microservice Payload Transaction";
-
-    // الخطوة 1: التحقق من المصادقة أولاً
-    let is_authorized = AuthValidator::verify_token(incoming_token)
-        .map_err(|e| format!("Auth error: {}", e))?;
-
-    if is_authorized {
-        println!("Authentication passed successfully.");
-
-        // الخطوة 2: التشفير والمعالجة في النواة
-        let (ciphertext, nonce) = crypto_engine.encrypt(plaintext)?;
-        let decrypted = crypto_engine.decrypt(&ciphertext, &nonce)?;
-
-        assert_eq!(&plaintext[..], &decrypted[..]);
-        println!("Microservice pipeline verified successfully!");
+// استيراد الملفات المولدة تلقائياً من الـ proto
+pub mod madi {
+    pub mod engine {
+        pub mod v1 {
+            tonic::include_proto!("madi.engine.v1");
+        }
     }
+}
+
+use madi::engine::v1::{
+    madi_engine_core_server::{MadiEngineCore, MadiEngineCoreServer},
+    PayloadRequest, PayloadResponse, HealthRequest, HealthResponse,
+};
+
+#[derive(Default)]
+pub struct EngineService {}
+
+#[tonic::async_trait]
+impl MadiEngineCore for EngineService {
+    async fn process_payload(
+        &self,
+        request: Request<PayloadRequest>,
+    ) -> Result<Response<PayloadResponse>, Status> {
+        let req = request.into_inner();
+        println!("Received request_id: {} with action: {}", req.request_id, req.action_type);
+
+        // معالجة البيانات (تجهيزاً لدمج تشفير AES-256-GCM لاحقاً)
+        let processed_payload = req.encrypted_data;
+
+        let reply = PayloadResponse {
+            request_id: req.request_id,
+            success: true,
+            processed_data: processed_payload,
+            error_message: "".to_string(),
+        };
+
+        Ok(Response::new(reply))
+    }
+
+    async fn health_check(
+        &self,
+        _request: Request<HealthRequest>,
+    ) -> Result<Response<HealthResponse>, Status> {
+        let reply = HealthResponse {
+            status: "ONLINE - MadiEngineCore is operational".to_string(),
+            timestamp: chrono::Utc::now().timestamp(),
+        };
+        Ok(Response::new(reply))
+    }
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let addr = "[::1]:50051".parse()?;
+    let service = EngineService::default();
+
+    println!("MadiEngineCore gRPC server listening on {}", addr);
+
+    Server::builder()
+        .add_service(MadiEngineCoreServer::new(service))
+        .serve(addr)
+        .await?;
 
     Ok(())
 }

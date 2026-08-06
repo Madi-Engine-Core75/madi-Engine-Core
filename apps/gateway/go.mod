@@ -1,5 +1,5 @@
-module gateway
+module github.com/Madi-Engine-Core/madi-gateway
 
-go 1.26.4
+go 1.22.0
 
-replace gateway/proto/gen/core => ../..
+replace github.com/Madi-Engine-Core/MadiEngineCore => ../../rust-core

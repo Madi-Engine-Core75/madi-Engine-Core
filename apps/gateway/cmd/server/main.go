@@ -8,10 +8,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-
-	pb "github.com/Madi-Engine-Core75/apps/gateway/internal/pb"
-)
-
+pb "github.com/madi-engine-core/madi-gateway/internal/pb
 func main() {
 	// 1. الاتصال بخادم Rust (gRPC Server)
 	conn, err := grpc.Dial("127.0.0.1:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))

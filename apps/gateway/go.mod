@@ -1,6 +1,2 @@
-module github.com/Madi-Engine-Core/madi-gateway
-
-go 1.22.0
-
-replace github.com/Madi-Engine-Core/madi-gateway => .
-replace github.com/Madi-Engine-Core/madi-gateway => ./
+module github.com/Madi-Engine-Core75/madi-gateway
+go 1.26.4

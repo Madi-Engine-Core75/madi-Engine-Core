@@ -1,13 +1,7 @@
 package handler
 
-import (
-"gateway/proto/gen/core"
-)
+import ("madi-gateway/proto/gen/core")
 
-type Handler struct {
-core.UnimplementedAuthServiceServer
-}
+type Handler struct {core.UnimplementedAuthServiceServer}
 
-func NewHandler() *Handler {
-return &Handler{}
-}
+func NewHandler() *Handler {return &Handler{}}

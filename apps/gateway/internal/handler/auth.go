@@ -1,6 +1,6 @@
 package handler
 
-import ("./proto/gen/core")
+import ("github.com/Madi-Engine-Core75/madi-gateway/proto/gen/core")
 
 type Handler struct {core.UnimplementedAuthServiceServer}
 

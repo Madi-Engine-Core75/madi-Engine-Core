@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	pb "./proto/vault"
+	pb "github.com/Madi-Engine-Core75/madi-gateway/proto/vault"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )

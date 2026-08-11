@@ -11,11 +11,7 @@ serde_json = "1.0"
 tokio = { version = "1.0", features = [ "full" ] }
 tonic = "0.10"
 prost = "0.12"
-<<<<<<< Updated upstream
 chrono = "0.4"
-=======
-chrono = "0.4.45"
->>>>>>> Stashed changes
 
 [build-dependencies]
 tonic-build = "0.10"

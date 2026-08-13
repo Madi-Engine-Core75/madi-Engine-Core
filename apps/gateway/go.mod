@@ -1,1 +1,3 @@
-hereprintf "module github.com/Madi-Engine-Core75/madi-gateway\n\ngo 1.26.4\n" > go.mod
+module github.com/Madi-Engine-Core75/madi-gateway
+
+go 1.26.4

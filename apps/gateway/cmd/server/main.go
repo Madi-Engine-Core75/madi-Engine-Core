@@ -1,17 +1,21 @@
 package main
 
 import (
-	context "context"
-	log "log"
-	net "net"
-	time "time"
+	"context"
+	"log"
+	"net"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-pb "github.com/Madi-Engine-Core75/madi-gateway/internal/pb"
-	func main() {
-	// 1. الاتصال بخادم Rust (gRPC Server)
-	conn, err := grpc.Dial("127.0.0.1:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	
+	pb "github.com/Madi-Engine-Core75/madi-gateway/proto/gen/core"
+	"github.com/Madi-Engine-Core75/madi-gateway/internal/router"
+)
+
+func main() {
+	// 1. الاتصال بنواة Rust (gRPC Server)
+	conn, err := grpc.Dial("127.0.0.1:5001", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("failed to connect to rust-core: %v", err)
 	}
@@ -19,7 +23,7 @@ pb "github.com/Madi-Engine-Core75/madi-gateway/internal/pb"
 
 	client := pb.NewMadiEngineCoreClient(conn)
 
-	// 2. اختبار فحص الحالة (HealthCheck) مع النواة
+	// 2. (HealthCheck) اختبار فحص الحالة مع النواة
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 
@@ -30,6 +34,12 @@ pb "github.com/Madi-Engine-Core75/madi-gateway/internal/pb"
 		log.Printf("Rust Core Status: %s (Timestamp: %d)", healthRes.Status, healthRes.Timestamp)
 	}
 
-	// 3. هنا يمكنك لاحقاً ربط مسارات الـ API (مثل /api/v1/auth/login) لتمرير البيانات عبر اللتلخيص والتشفير
+	// 3. تهيئة الراوتر وتشغيل الـ API
+	r := router.NewRouter()
 	log.Println("Madi Gateway is up and running, routing events to MadiEngineCore.")
+	
+	// تشغيل السيرفر المحلي
+	if err := r.Run(":8080"); err != nil {
+		log.Fatalf("failed to run gateway server: %v", err)
+	}
 }

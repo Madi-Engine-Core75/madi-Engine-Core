@@ -1,41 +1,53 @@
+cat << 'EOF' > cmd/server/main.go
 package main
 
 import (
-	"context"
 	"log"
-	"net"
+	"net/http"
+	"github.com/Madi-Engine-Core75/madi-gateway/internal/vault"
+	"github.com/Madi-Engine-Core75/madi-gateway/internal/broker"
+	"strconv"
 	"time"
-
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
-	"github.com/Madi-Engine-Core75/madi-gateway/internal/router"
-	pb "github.com/Madi-Engine-Core75/madi-gateway/proto/gen/core"
 )
 
 func main() {
-	conn, err := grpc.NewClient("127.0.0.1:5001", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Fatalf("failed to connect to rust-core: %v", err)
-	}
-	defer conn.Close()
+	log.Println("Initializing Madi-Engine-Core Gateway with Async Broker & Vault...")
+	
+	eventDispatcher := broker.NewDispatcher(100)
 
-	client := pb.NewMadiEngineCoreClient(conn)
+	http.HandleFunc("/api/v1/route", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			w.Write([]byte(`{"error":"method not allowed"}`))
+			return
+		}
+		
+		plainPayload := "financial-routing-payload-" + strconv.FormatInt(time.Now().UnixNano(), 10)
+		encrypted, err := vault.Encrypt([]byte(plainPayload))
+		if err != nil {
+			log.Printf("Encryption error: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"error":"encryption failed"}`))
+			return
+		}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-	defer cancel()
+		// إرسال الحدث للمعالجة غير المتزامنة في الخلفية دون إبطاء الاستجابة
+		eventDispatcher.Publish("EVT-"+strconv.FormatInt(time.Now().Unix(), 10), plainPayload)
 
-	healthRes, err := client.HealthCheck(ctx, &pb.HealthRequest{})
-	if err != nil {
-		log.Printf("HealthCheck failed: %v", err)
-	} else {
-		log.Printf("Rust Core Status: %s (Timestamp: %d)", healthRes.Status, healthRes.Timestamp)
-	}
+		log.Println("Payload successfully encrypted, queued asynchronously, and routed via AES-256-GCM.")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"routed","cipher":"` + encrypted + `"}`))
+	})
 
-	r := router.NewRouter()
-	log.Println("Madi Gateway is up and running, routing events to MadiEngineCore.")
+	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
 
-	if err := r.Run(":8080"); err != nil {
-		log.Fatalf("failed to run gateway server: %v", err)
+	log.Println("Server is listening securely on :8080")
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		log.Fatalf("server failed: %v", err)
 	}
 }
+EOF

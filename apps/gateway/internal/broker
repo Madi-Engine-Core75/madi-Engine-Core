@@ -1,0 +1,43 @@
+heremkdir -p internal/broker
+cat << 'EOF' > internal/broker/dispatcher.go
+package broker
+
+import (
+	"log"
+	"time"
+)
+
+type Event struct {
+	ID        string
+	Payload   string
+	Timestamp time.Time
+}
+
+type Dispatcher struct {
+	Queue chan Event
+}
+
+func NewDispatcher(bufferSize int) *Dispatcher {
+	d := &Dispatcher{
+		Queue: make(chan Event, bufferSize),
+	}
+	go d.listen()
+	return d
+}
+
+func (d *Dispatcher) Publish(id, payload string) {
+	d.Queue <- Event{
+		ID:        id,
+		Payload:   payload,
+		Timestamp: time.Now(),
+	}
+}
+
+func (d *Dispatcher) listen() {
+	for evt := range d.Queue {
+		log.Printf("[Async Dispatcher] Processing Event ID: %s at %s", evt.ID, evt.Timestamp.Format(time.RFC3339))
+		// محاكاة معالجة البيانات غير المتزامنة بأمان على الهاتف
+		time.Sleep(50 * time.Millisecond)
+	}
+}
+EOF

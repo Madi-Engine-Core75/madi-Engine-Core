@@ -2,5 +2,8 @@
 linker = "clang"
 rustflags = [
     "-C", "link-arg=--sysroot=/data/data/com.termux/files/usr",
-    "-C", "link-arg=-L/data/data/com.termux/files/usr/lib"
+    "-C", "link-arg=-L/data/data/com.termux/files/usr/lib",
+    "-C", "link-arg=-L/data/data/com.termux/files/usr/lib/aarch64-linux-android",
+    "-C", "link-arg=-Wl,-rpath=/data/data/com.termux/files/usr/lib",
+    "-C", "link-arg=-Wl,-dynamic-linker,/system/bin/linker64"
 ]
